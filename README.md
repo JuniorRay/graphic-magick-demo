@@ -2,8 +2,11 @@
 
 
 ![Image text](doc/img/demo.jpg)
+
 ###前言：
+
 使用前，先安装graphic-magick 和cwebp
+
 ###功能：
 
 1.webp压缩
