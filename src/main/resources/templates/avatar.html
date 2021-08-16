@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+    <th:block th:include="include :: header('GraphicMagick在线测试')" />
+    <th:block th:include="include :: cropper-css" />
+    <style type='text/css'>
+        /* avator css start */
+        .container {
+            overflow: auto;
+            display: flex;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 5px 5px 5px;
+        }
+
+        .action {
+            padding: 5px 0px;
+        }
+
+        .cropped {
+            padding: 0 30px;
+            position: relative;
+            width: 100%;
+            border: 1px #ddd solid;
+            box-shadow: 0px 0px 12px #ddd;
+        }
+
+        .img-preview {
+            border-radius: 50%;
+            box-shadow: 0px 0px 12px #7e7e7e;
+            display: inline-block;
+        }
+
+        .preview-box {
+            text-align: center;
+            margin: 0px auto;
+            margin-top: 10px;
+            color: #bbb;
+        }
+
+        .preview-md {
+            width: 128px;
+            height: 128px;
+        }
+
+        .preview-sm {
+            width: 96px;
+            height: 96px;
+        }
+
+        .preview-xs {
+            width: 64px;
+            height: 64px;
+        }
+
+        .imageBox {
+            border: 1px solid #aaa;
+            overflow: hidden;
+            cursor: move;
+            box-shadow: 4px 4px 12px #B0B0B0;
+            margin: 0px auto;
+        }
+
+        .btn-custom {
+            float: right;
+            width: 46px;
+            display: inline-block;
+            margin-bottom: 10px;
+            height: 37px;
+            line-height: 37px;
+            font-size: 14px;
+            color: #FFFFFF;
+            margin: 0px 2px;
+            background-color: #f38e81;
+            border-radius: 3px;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0px 0px 5px #B0B0B0;
+            border: 0px #fff solid;
+        }
+        /*选择文件上传*/
+        .new-contentarea {
+            width: 165px;
+            overflow: hidden;
+            margin: 0 auto;
+            position: relative;
+            float: left;
+        }
+
+        .new-contentarea label {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .new-contentarea input[type=file] {
+            width: 188px;
+            height: 60px;
+            background: #333;
+            margin: 0 auto;
+            position: absolute;
+            right: 50%;
+            margin-right: -94px;
+            top: 0;
+            right/*\**/: 0px\9;
+            margin-right/*\**/: 0px\9;
+            width/*\**/: 10px\9;
+            opacity: 0;
+            filter: alpha(opacity=0);
+            z-index: 2;
+        }
+
+        a.upload-img {
+            width: 165px;
+            display: inline-block;
+            margin-bottom: 10px;
+            height: 37px;
+            line-height: 37px;
+            font-size: 14px;
+            color: #FFFFFF;
+            background-color: #f38e81;
+            border-radius: 3px;
+            text-decoration: none;
+            cursor: pointer;
+            border: 0px #fff solid;
+            box-shadow: 0px 0px 5px #B0B0B0;
+        }
+
+        a.upload-img:hover {
+            background-color: #ec7e70;
+        }
+
+        .tc {
+            text-align: center;
+        }
+        .res-ret{
+            font-size: 20px;
+            padding: 10px;
+            justify-content: center;
+            display: flex;
+            text-align: center;
+            width: 100%;
+        }
+        .img-res-box{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: calc( 100% - 90px);
+            border: 1px solid #CCCCCC;
+            box-sizing: border-box;
+        }
+
+        .img-res-box{
+
+        }
+        /* avator css end */
+    </style>
+</head>
+<body class="white-bg" style="align-items: center;flex-direction: column;display: flex;justify-content: center;">
+<h2>GraphicMagick在线测试（By-TCL平台架构组）</h2>
+<div class="row container">
+    <div class="col-md-6">
+        <div class="imageBox">
+            <img id="avatar" th:src="(${#strings.isEmpty(user.avatar)}) ? @{/img/profile.jpg} : @{${user.avatar}}" th:onerror="'this.src=\'' + @{'/img/profile.jpg'} + '\''">
+        </div>
+        <div class="action">
+            <div class="new-contentarea tc">
+                <a href="javascript:void(0)" class="upload-img"><label for="inputImage">上传图像</label> </a>
+                <input type="file" name="avatar" id="inputImage" accept="image/*"/>
+            </div>
+            <button style=" width: 100px; " type="button" class="btn-custom"  onclick="submitWebp()">webp压缩</button>
+            <button style=" width: 100px; " type="button" class="btn-custom"  onclick="submitCrop()">裁剪</button>
+            <button type="button" class="btn-custom" id="zoom-plus" onclick="zoomPlus()" data-option="0.1"><i class="fa fa-search-plus"></i></button>
+            <button type="button" class="btn-custom" id="zoom-minus" onclick="zoomMinus()" data-option="-0.1"><i class="fa fa-search-minus"></i></button>
+            <button type="button" class="btn-custom" id="rotate-left" onclick="rotateLeft()" data-option="-45"><i class="fa fa-rotate-left"></i></button>
+            <button type="button" class="btn-custom" id="rotate-right" onclick="rotateRight()" data-option="45"><i class="fa fa-rotate-right"></i></button>
+            <!--  <button type="button" class="btn-custom" id="scaleX" data-option="-1"><i class="fa fa-arrows-h"></i></button>
+              <button type="button" class="btn-custom" id="scaleY" data-option="-1"><i class="fa fa-arrows-v"></i></button>
+              <button type="button" class="btn-custom" id="reset"><i class="fa fa-refresh"></i></button>-->
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="cropped">
+            <div class="res-ret">
+                响应结果
+            </div>
+            <div class="img-res-box" style="overflow: auto">
+                <img class="img-res" id="img-res" />
+            </div>
+            <!--  <div class="preview-box">
+                  <div class="img-preview preview-sm"></div>
+              </div>
+              <div class="preview-box">
+                  <div class="img-preview preview-md"></div>
+              </div>-->
+
+
+
+        </div>
+    </div>
+</div>
+<th:block th:include="include :: footer" />
+<th:block th:include="include :: cropper-js" />
+<script type="text/javascript">
+    // "记录一下上传的文件名"
+    var uploadFileName = '';
+    // 记录一下裁剪的canvas坐标X
+    var canvasCropInfo = {
+        canvasCropX : null,
+        canvasCropY : null,
+        canvasCropWidth : null,
+        canvasCropHeight : null,
+        canvasCropRotate : null,
+        canvasCropScaleX : null,
+        canvasCropScaleY : null
+    }
+    // 记录一下裁剪url
+    var cutUrl = "";
+
+    var cropper;
+    var croppable = false;
+    $(window).load(function() {
+        var image = document.getElementById('avatar');
+        cropper = new Cropper(image, {
+            // aspectRatio: 1,
+            viewMode: 1,
+            // autoCropArea: 0.9,
+            preview: '.img-preview',
+            ready: function () {
+                croppable = true;
+            },
+            crop: function (e) {
+                canvasCropInfo.canvasCropX = e.detail.x;
+                canvasCropInfo.canvasCropY = e.detail.y;
+                canvasCropInfo.canvasCropWidth = e.detail.width;
+                canvasCropInfo.canvasCropHeight = e.detail.height;
+                canvasCropInfo.canvasCropRotate = e.detail.rotate;
+                canvasCropInfo.canvasCropScaleX = e.detail.scaleX;
+                canvasCropInfo.canvasCropScaleY = e.detail.scaleY;
+                /*
+                                console.log(e.detail.x);
+                                console.log(e.detail.y);
+                                console.log(e.detail.width);
+                                console.log(e.detail.height);
+                                console.log(e.detail.rotate);
+                                console.log(e.detail.scaleX);
+                                console.log(e.detail.scaleY);*/
+            }
+        })
+
+        $('#inputImage').on('change', function() {
+            var reader = new FileReader();
+            var file = $('#inputImage')[0].files[0];
+            if (/^image\/\w+$/.test(file.type)) {
+
+                /**
+                 * 错误写法！！！！， API已经更新！！！，网上文章都是！错误的！！！
+                 *
+                 */
+                    // var formData = new FormData(document.getElementById('inputImage')));
+
+                    // 下面这种是指定键值对的方式
+                var formData = new FormData();
+                // 这里的file 和后面一一对应
+                formData.append('file', document.getElementById('inputImage').files[0]);
+                // 上传图片
+                $.ajax({
+                    url:"/common/upload",
+                    type:"post",
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(data) {
+                        if (data.code == 200) {
+                            // 记录文件名
+                            uploadFileName = data.data.fileName;
+                            reader.onload = function(e) {
+                                if(croppable){
+                                    cropper.replace(e.target.result)
+                                }
+                            }
+                            reader.readAsDataURL(document.getElementById('inputImage').files[0]);
+                        } else {
+                            $.modal.alertWarning(data.msg);
+                        }
+                    },
+                    error:function(data) {
+                        $.modal.alertWarning('上传失败');
+                    }
+                });
+
+            } else {
+                $.modal.alertWarning('请选择一个图片文件。');
+            }
+        });
+
+        $('.btn-custom').on('click',function (e) {
+            if (!croppable) {
+                $.modal.alertWarning("裁剪框加载中,请稍后...");
+                return;
+            }
+            var data = {
+                method: $(this).data('method'),
+                option: $(this).data('option') || undefined,
+            };
+            // var result = cropper[data.method](data.option, data.secondOption);
+            if(['scaleX','scaleY'].indexOf(data.method) !== -1){
+                $(this).data('option', -data.option)
+            }
+        })
+    });
+
+    //获取图片原始大小的函数
+    function getNaturalSize() {
+        var cropImgAvatar = $("#avatar");
+        var natureSize = {};
+        if (window.naturalWidth && window.naturalHeight) {
+            natureSize.width = cropImgAvatar.naturalWidth;
+            //alert(" natureSize.width="+ natureSize.width);
+            natureSize.height = cropImgAvatar.naturalHeight;
+            //alert(" natureSize.height="+ natureSize.height);
+        } else {
+            var img = new Image();
+            img.src = cropImgAvatar.attr('src');
+            natureSize.width = img.width;
+            //alert(" natureSize.width="+ natureSize.width);
+            natureSize.height = img.height;
+            // alert(" natureSize.height="+ natureSize.height);
+        }
+        return natureSize;
+    }
+
+    //获取图片显示大小函数
+    function getShowSize() {
+        var cropImgAvatar = $(".cropper-canvas");
+        var showSize = {};
+        showSize.height = (cropImgAvatar.css("height") + "").replace("px", "");//去掉单位px
+        showSize.width = (cropImgAvatar.css("width") + "").replace("px", "");
+        return showSize;
+    }
+
+    // webp压缩
+    function submitWebp(){
+        if(uploadFileName == ""){
+            $.modal.alertWarning("请先上传图片");
+            return;
+        }
+
+        console.log(canvasCropInfo.canvasCropWidth);
+        console.log(canvasCropInfo.canvasCropHeight);
+
+        // 裁剪框的宽度
+        var width = canvasCropInfo.canvasCropWidth;
+        // 裁剪框的高度
+        var height = canvasCropInfo.canvasCropHeight;
+
+        //由于前面限定了img的高宽度所以实际传回后台的比列与实际图片的尺寸不相符。所以需要做比例替换
+        // 获取原始大小
+        var natural = getNaturalSize();
+        natureWidth = parseFloat(natural.width);
+        natureHeight = parseFloat(natural.height);
+        //截图画面的大小
+        var showSize = getShowSize();
+        var virtualWidth = parseFloat(showSize.width);
+        var virtualHeight = parseFloat(showSize.height);
+        //比列
+        var widthProp = parseFloat(virtualWidth / natureWidth);
+        var heightProp = parseFloat(virtualHeight / natureHeight);
+
+
+        var cutNatureWidth = parseInt(width / widthProp);
+        var cutNatureHeight = parseInt(height / heightProp);
+        var url = "/webp/?&width="+cutNatureWidth
+            // +"&mt="+"true"+"&nearLossless="+100
+            +"&height="+cutNatureHeight+"&sourceFileName="+uploadFileName;
+        $("#img-res").css("width",width+"px");
+        $("#img-res").css("height",height+"px");
+        $("#img-res").attr("src",url);
+    }
+
+    // 提交裁剪结果
+    function submitCrop(){
+        if(uploadFileName == ""){
+            $.modal.alertWarning("请先上传图片");
+            return;
+        }
+        console.log(canvasCropInfo.canvasCropX);
+        console.log(canvasCropInfo.canvasCropY);
+        console.log(canvasCropInfo.canvasCropWidth);
+        console.log(canvasCropInfo.canvasCropHeight);
+        console.log(canvasCropInfo.canvasCropRotate);
+        console.log(canvasCropInfo.canvasCropScaleX);
+        console.log(canvasCropInfo.canvasCropScaleY);
+        // 裁剪框的宽度
+        var width = canvasCropInfo.canvasCropWidth;
+        // 裁剪框的高度
+        var height = canvasCropInfo.canvasCropHeight;
+        // 相对于裁剪图片x左边
+        var x = canvasCropInfo.canvasCropX;
+        // 相对于裁剪图片y左边
+        var y = canvasCropInfo.canvasCropY;
+        //由于前面限定了img的高宽度所以实际传回后台的比列与实际图片的尺寸不相符。所以需要做比例替换
+        // 获取原始大小
+        var natural = getNaturalSize();
+        natureWidth = parseFloat(natural.width);
+        natureHeight = parseFloat(natural.height);
+        //截图画面的大小
+        var showSize = getShowSize();
+        var virtualWidth = parseFloat(showSize.width);
+        var virtualHeight = parseFloat(showSize.height);
+        //比列
+        var widthProp = parseFloat(virtualWidth / natureWidth);
+        var heightProp = parseFloat(virtualHeight / natureHeight);
+        //实际裁剪大小
+        var natureX = parseInt(x / widthProp);
+        var natureY = parseInt(y / heightProp);
+        var cutNatureWidth = parseInt(width / widthProp);
+        var cutNatureHeight = parseInt(height / heightProp);
+        cutUrl = "/img/cutImage?x="+natureX+"&y="+natureY+"&width="+cutNatureWidth
+            +"&height="+cutNatureHeight+"&imageName="+uploadFileName;
+        $("#img-res").css("width",width+"px");
+        $("#img-res").css("height",height+"px");
+        $("#img-res").attr("src",cutUrl);
+        /*$.ajax({
+           type: "GET",
+           url: cutUrl,
+           dataType: "json",
+           success: function (data) {
+
+               if(data.code == 200){
+
+                   console.log("cut_path===" + cut_path);
+                   $.modal.alertWarning("裁剪成功");
+               }else{
+                   $.modal.alertWarning("裁剪失败");
+               }
+
+           },
+           error: function () {
+               $.modal.alertWarning("网络异常，请稍后再试...");
+           }
+       });*/
+
+    }
+
+    var zoomPlusNum = 50;
+    var zoomTemp = 0;
+
+
+    // 放大
+    function zoomPlus() {
+        if(uploadFileName == ""){
+            $.modal.alertWarning("请先上传图片");
+            return;
+        }
+        if(zoomTemp == 0){
+            var showSizeTemp = getShowSize();
+            var virtualWidthTemp = parseFloat(showSizeTemp.width);
+            var virtualHeightTemp = parseFloat(showSizeTemp.height);
+            zoomTemp = virtualWidthTemp;
+        }
+        zoomTemp = zoomTemp+zoomPlusNum;
+        var url = "/img/zoomImage?width="+zoomTemp
+            +"&height="+zoomTemp+"&imageName="+uploadFileName;
+        $("#img-res").css("width",zoomTemp+"px");
+        $("#img-res").css("height",zoomTemp+"px");
+        $("#img-res").attr("src",url);
+
+    }
+
+    var zoomMinusNum = -50;
+
+    // 缩小
+    function zoomMinus() {
+        if(uploadFileName == ""){
+            $.modal.alertWarning("请先上传图片");
+            return;
+        }
+        if(zoomTemp == 0){
+            var showSizeTemp = getShowSize();
+            var virtualWidthTemp = parseFloat(showSizeTemp.width);
+            var virtualHeightTemp = parseFloat(showSizeTemp.height);
+            zoomTemp = virtualWidthTemp;
+        }
+        zoomTemp = zoomTemp+zoomMinusNum;
+        var url = "/img/zoomImage?width="+zoomTemp
+            +"&height="+zoomTemp+"&imageName="+uploadFileName;
+        $("#img-res").css("width",zoomTemp+"px");
+        $("#img-res").css("height",zoomTemp+"px");
+        $("#img-res").attr("src",url);
+
+        if(zoomTemp <= 0){
+            zoomTemp = 0;
+        }
+    }
+    var degreeRotatTemp = 0;
+    var degreeRotateLeft = -45;
+    // 左旋
+    function rotateLeft() {
+        if(uploadFileName == ""){
+            $.modal.alertWarning("请先上传图片");
+            return;
+        }
+        degreeRotatTemp = degreeRotatTemp+degreeRotateLeft;
+        var showSize = getShowSize();
+        var virtualWidth = parseFloat(showSize.width);
+        var virtualHeight = parseFloat(showSize.height);
+        var url = "/img/rotate?degree="+degreeRotatTemp+"&imageName="+uploadFileName;
+        $("#img-res").css("width",virtualWidth+"px");
+        $("#img-res").css("height",virtualHeight+"px");
+        $("#img-res").attr("src",url);
+
+    }
+    var degreeRotateRight = 45;
+    // 右旋
+    function rotateRight() {
+        if(uploadFileName == ""){
+            $.modal.alertWarning("请先上传图片");
+            return;
+        }
+        degreeRotatTemp = degreeRotatTemp+degreeRotateRight;
+        var showSize = getShowSize();
+        var virtualWidth = parseFloat(showSize.width);
+        var virtualHeight = parseFloat(showSize.height);
+        var url = "/img/rotate?degree="+degreeRotatTemp+"&imageName="+uploadFileName;
+        $("#img-res").css("width",virtualWidth+"px");
+        $("#img-res").css("height",virtualHeight+"px");
+        $("#img-res").attr("src",url);
+
+    }
+
+    function submitHandler() {
+        if (!croppable) {
+            $.modal.alertWarning("裁剪框加载中,请稍后...");
+            return
+        }
+        cropper.getCroppedCanvas().toBlob(function(img) {
+            var formdata = new FormData();
+            formdata.append("avatarfile", img);
+            $.ajax({
+                url: ctx + "system/user/profile/updateAvatar",
+                data: formdata,
+                type: "post",
+                processData: false,
+                contentType: false,
+                success: function(result) {
+                    $.operate.saveSuccess(result);
+                }
+            })
+        });
+    }
+
+    $(window).resize(function() {
+        $('.imageBox').height($(window).height() - 140);
+        $('.cropped').height($(window).height() - 100);
+    }).resize();
+
+    if (!HTMLCanvasElement.prototype.toBlob) {
+        Object.defineProperty(HTMLCanvasElement.prototype, 'toBlob', {
+            value: function(callback, type, quality) {
+                var canvas = this;
+                setTimeout(function() {
+                    var binStr = atob(canvas.toDataURL(type, quality).split(',')[1]);
+                    var len = binStr.length;
+                    var arr = new Uint8Array(len);
+                    for (var i = 0; i < len; i++) {
+                        arr[i] = binStr.charCodeAt(i);
+                    }
+                    callback(new Blob([arr], {
+                        type: type || 'image/png'
+                    }));
+                });
+            }
+        });
+    }
+</script>
+</body>
+</html>
