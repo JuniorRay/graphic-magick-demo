@@ -11,6 +11,8 @@
             width: 100%;
             box-sizing: border-box;
             padding: 10px 5px 5px 5px;
+            justify-content: center;
+            align-items: center;
         }
 
         .action {
@@ -21,6 +23,7 @@
             padding: 0 30px;
             position: relative;
             width: 100%;
+            height: 100%;
             border: 1px #ddd solid;
             box-shadow: 0px 0px 12px #ddd;
         }
@@ -154,13 +157,16 @@
         .img-res-box{
 
         }
+        #ret-wrap{
+            height: 100%;
+        }
         /* avator css end */
     </style>
 </head>
 <body class="white-bg" style="align-items: center;flex-direction: column;display: flex;justify-content: center;">
 <h2>GraphicMagick在线测试（By-TCL平台架构组）</h2>
 <div class="row container">
-    <div class="col-md-6">
+    <div class="col-md-10">
         <div class="imageBox">
             <img id="avatar" th:src="(${#strings.isEmpty(user.avatar)}) ? @{/img/profile.jpg} : @{${user.avatar}}" th:onerror="'this.src=\'' + @{'/img/profile.jpg'} + '\''">
         </div>
@@ -169,8 +175,8 @@
                 <a href="javascript:void(0)" class="upload-img"><label for="inputImage">上传图像</label> </a>
                 <input type="file" name="avatar" id="inputImage" accept="image/*"/>
             </div>
-            <button style=" width: 100px; " type="button" class="btn-custom"  onclick="submitWebp()">webp压缩</button>
-            <button style=" width: 100px; " type="button" class="btn-custom"  onclick="submitCrop()">裁剪</button>
+            <button style=" width: 100px; " type="button" class="btn-custom" id="webp-wrap"  onclick="submitWebp()">webp压缩</button>
+            <button style=" width: 100px; " type="button" class="btn-custom" id="cutImg" onclick="submitCrop()">裁剪</button>
             <button type="button" class="btn-custom" id="zoom-plus" onclick="zoomPlus()" data-option="0.1"><i class="fa fa-search-plus"></i></button>
             <button type="button" class="btn-custom" id="zoom-minus" onclick="zoomMinus()" data-option="-0.1"><i class="fa fa-search-minus"></i></button>
             <button type="button" class="btn-custom" id="rotate-left" onclick="rotateLeft()" data-option="-45"><i class="fa fa-rotate-left"></i></button>
@@ -180,8 +186,8 @@
               <button type="button" class="btn-custom" id="reset"><i class="fa fa-refresh"></i></button>-->
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="cropped">
+    <div class="" style="display: none" id="ret-wrap">
+        <div class="cropped" >
             <div class="res-ret">
                 响应结果
             </div>
@@ -203,6 +209,17 @@
 <th:block th:include="include :: footer" />
 <th:block th:include="include :: cropper-js" />
 <script type="text/javascript">
+    //layui 模块的使用
+    // layui.use(['layer', 'form'], function(){
+    //     var layer = layui.layer
+    //         ,form = layui.form;
+    layer.tips("裁剪框可以选择图片边界进行缩放",$("#cutImg"));
+    $("#cutImg").hover(function () {
+        layer.tips("裁剪框可以选择图片边界进行缩放",$("#cutImg"),{
+            tips: 1
+        });
+    })
+
     // "记录一下上传的文件名"
     var uploadFileName = '';
     // 记录一下裁剪的canvas坐标X
@@ -226,6 +243,7 @@
             // aspectRatio: 1,
             viewMode: 1,
             // autoCropArea: 0.9,
+            autoCropArea: 1,
             preview: '.img-preview',
             ready: function () {
                 croppable = true;
@@ -277,7 +295,8 @@
                             uploadFileName = data.data.fileName;
                             reader.onload = function(e) {
                                 if(croppable){
-                                    cropper.replace(e.target.result)
+                                    // cropper.replace(e.target.result)
+                                    cropper.replace(data.data.url);
                                 }
                             }
                             reader.readAsDataURL(document.getElementById('inputImage').files[0]);
@@ -313,7 +332,7 @@
 
     //获取图片原始大小的函数
     function getNaturalSize() {
-        var cropImgAvatar = $("#avatar");
+        var cropImgAvatar = $(".cropper-canvas").find("img");
         var natureSize = {};
         if (window.naturalWidth && window.naturalHeight) {
             natureSize.width = cropImgAvatar.naturalWidth;
@@ -333,13 +352,17 @@
 
     //获取图片显示大小函数
     function getShowSize() {
-        var cropImgAvatar = $(".cropper-canvas");
+        var cropImgAvatar = $(".cropper-canvas").find("img");
         var showSize = {};
         showSize.height = (cropImgAvatar.css("height") + "").replace("px", "");//去掉单位px
         showSize.width = (cropImgAvatar.css("width") + "").replace("px", "");
         return showSize;
     }
-
+    $("#webp-wrap").hover(function () {
+        layer.tips("裁剪框可以控制webp转换大小",$(this),{
+            tips: 1
+        });
+    })
     // webp压缩
     function submitWebp(){
         if(uploadFileName == ""){
@@ -371,12 +394,39 @@
 
         var cutNatureWidth = parseInt(width / widthProp);
         var cutNatureHeight = parseInt(height / heightProp);
-        var url = "/webp/?&width="+cutNatureWidth
+
+        // 裁剪框的宽度
+        var width = parseInt(canvasCropInfo.canvasCropWidth);
+        // 裁剪框的高度
+        var height =parseInt( canvasCropInfo.canvasCropHeight);
+        // 相对于裁剪图片x左边
+        var x = parseInt(canvasCropInfo.canvasCropX);
+        // 相对于裁剪图片y左边
+        var y = parseInt(canvasCropInfo.canvasCropY);
+
+       /* var url = "/webp/?&width="+cutNatureWidth
             // +"&mt="+"true"+"&nearLossless="+100
-            +"&height="+cutNatureHeight+"&sourceFileName="+uploadFileName;
+            +"&height="+cutNatureHeight+"&sourceFileName="+uploadFileName; */
+
+        var url = "/webp/?&width="+width
+            // +"&mt="+"true"+"&nearLossless="+100
+            +"&height="+height+"&sourceFileName="+uploadFileName;
         $("#img-res").css("width",width+"px");
         $("#img-res").css("height",height+"px");
         $("#img-res").attr("src",url);
+        layer.open({
+            title:" ",
+            area:['90%','90%'],
+            type: 1,
+            shade: false,
+            content: $('#ret-wrap'), //捕获的元素，注意：最好该指定的元素要存放在body最外层，否则可能被其它的相对元素所影响
+            success:function(){
+                layer.msg("请稍后，正在加载~")
+            },
+            end: function(){
+                $('#ret-wrap').css("display","none");
+            }
+        });
     }
 
     // 提交裁剪结果
@@ -417,11 +467,40 @@
         var natureY = parseInt(y / heightProp);
         var cutNatureWidth = parseInt(width / widthProp);
         var cutNatureHeight = parseInt(height / heightProp);
-        cutUrl = "/img/cutImage?x="+natureX+"&y="+natureY+"&width="+cutNatureWidth
+        /*cutUrl = "/img/cutImage?x="+natureX+"&y="+natureY+"&width="+cutNatureWidth
             +"&height="+cutNatureHeight+"&imageName="+uploadFileName;
+
+        $("#img-res").css("width",width+"px");
+        $("#img-res").css("height",height+"px");
+        $("#img-res").attr("src",cutUrl);*/
+
+        // 裁剪框的宽度
+        var width = parseInt(canvasCropInfo.canvasCropWidth);
+        // 裁剪框的高度
+        var height =parseInt( canvasCropInfo.canvasCropHeight);
+        // 相对于裁剪图片x左边
+        var x = parseInt(canvasCropInfo.canvasCropX);
+        // 相对于裁剪图片y左边
+        var y = parseInt(canvasCropInfo.canvasCropY);
+        cutUrl = "/img/cutImage?x="+x+"&y="+y+"&width="+width
+            +"&height="+height+"&imageName="+uploadFileName;
+
         $("#img-res").css("width",width+"px");
         $("#img-res").css("height",height+"px");
         $("#img-res").attr("src",cutUrl);
+        layer.open({
+            title:" ",
+            area:['90%','90%'],
+            type: 1,
+            shade: false,
+            content: $('#ret-wrap'), //捕获的元素，注意：最好该指定的元素要存放在body最外层，否则可能被其它的相对元素所影响
+            success:function(){
+                layer.msg("请稍后，正在加载~")
+            },
+            end: function(){
+                $('#ret-wrap').css("display","none");
+            }
+        });
         /*$.ajax({
            type: "GET",
            url: cutUrl,
@@ -447,7 +526,11 @@
     var zoomPlusNum = 50;
     var zoomTemp = 0;
 
-
+    $("#zoom-plus").hover(function () {
+        layer.tips("缩放（放大）",$(this),{
+            tips: 1
+        });
+    })
     // 放大
     function zoomPlus() {
         if(uploadFileName == ""){
@@ -455,9 +538,9 @@
             return;
         }
         if(zoomTemp == 0){
-            var showSizeTemp = getShowSize();
-            var virtualWidthTemp = parseFloat(showSizeTemp.width);
-            var virtualHeightTemp = parseFloat(showSizeTemp.height);
+            var showSizeTemp = getNaturalSize();
+            var virtualWidthTemp = parseInt(showSizeTemp.width);
+            var virtualHeightTemp = parseInt(showSizeTemp.height);
             zoomTemp = virtualWidthTemp;
         }
         zoomTemp = zoomTemp+zoomPlusNum;
@@ -466,9 +549,27 @@
         $("#img-res").css("width",zoomTemp+"px");
         $("#img-res").css("height",zoomTemp+"px");
         $("#img-res").attr("src",url);
+        layer.open({
+            title:" ",
+            area:['90%','90%'],
+            type: 1,
+            shade: false,
+            content: $('#ret-wrap'), //捕获的元素，注意：最好该指定的元素要存放在body最外层，否则可能被其它的相对元素所影响
+            success:function(){
+                layer.msg("请稍后，正在加载~")
+            },
+            end: function(){
+                $('#ret-wrap').css("display","none");
+            }
+        });
 
     }
 
+    $("#zoom-minus").hover(function () {
+        layer.tips("缩放（缩小）",$(this),{
+            tips: 1
+        });
+    })
     var zoomMinusNum = -50;
 
     // 缩小
@@ -478,9 +579,9 @@
             return;
         }
         if(zoomTemp == 0){
-            var showSizeTemp = getShowSize();
-            var virtualWidthTemp = parseFloat(showSizeTemp.width);
-            var virtualHeightTemp = parseFloat(showSizeTemp.height);
+            var showSizeTemp = getNaturalSize();
+            var virtualWidthTemp = parseInt(showSizeTemp.width);
+            var virtualHeightTemp = parseInt(showSizeTemp.height);
             zoomTemp = virtualWidthTemp;
         }
         zoomTemp = zoomTemp+zoomMinusNum;
@@ -493,9 +594,27 @@
         if(zoomTemp <= 0){
             zoomTemp = 0;
         }
+        layer.open({
+            title:" ",
+            area:['90%','90%'],
+            type: 1,
+            shade: false,
+            content: $('#ret-wrap'), //捕获的元素，注意：最好该指定的元素要存放在body最外层，否则可能被其它的相对元素所影响
+            success:function(){
+                layer.msg("请稍后，正在加载~")
+            },
+            end: function(){
+                $('#ret-wrap').css("display","none");
+            }
+        });
     }
     var degreeRotatTemp = 0;
     var degreeRotateLeft = -45;
+    $("#rotate-left").hover(function () {
+        layer.tips("左旋）",$(this),{
+            tips: 1
+        });
+    })
     // 左旋
     function rotateLeft() {
         if(uploadFileName == ""){
@@ -510,8 +629,25 @@
         $("#img-res").css("width",virtualWidth+"px");
         $("#img-res").css("height",virtualHeight+"px");
         $("#img-res").attr("src",url);
-
+        layer.open({
+            title:" ",
+            area:['90%','90%'],
+            type: 1,
+            shade: false,
+            content: $('#ret-wrap'), //捕获的元素，注意：最好该指定的元素要存放在body最外层，否则可能被其它的相对元素所影响
+            success:function(){
+                layer.msg("请稍后，正在加载~")
+            },
+            end: function(){
+                $('#ret-wrap').css("display","none");
+            }
+        });
     }
+    $("#rotate-right").hover(function () {
+        layer.tips("右旋）",$(this),{
+            tips: 1
+        });
+    })
     var degreeRotateRight = 45;
     // 右旋
     function rotateRight() {
@@ -527,7 +663,19 @@
         $("#img-res").css("width",virtualWidth+"px");
         $("#img-res").css("height",virtualHeight+"px");
         $("#img-res").attr("src",url);
-
+        layer.open({
+            title:" ",
+            area:['90%','90%'],
+            type: 1,
+            shade: false,
+            content: $('#ret-wrap'), //捕获的元素，注意：最好该指定的元素要存放在body最外层，否则可能被其它的相对元素所影响
+            success:function(){
+                layer.msg("请稍后，正在加载~")
+            },
+            end: function(){
+                $('#ret-wrap').css("display","none");
+            }
+        });
     }
 
     function submitHandler() {
@@ -553,7 +701,7 @@
 
     $(window).resize(function() {
         $('.imageBox').height($(window).height() - 140);
-        $('.cropped').height($(window).height() - 100);
+        // $('.cropped').height($(window).height() - 100);
     }).resize();
 
     if (!HTMLCanvasElement.prototype.toBlob) {
@@ -574,6 +722,8 @@
             }
         });
     }
+
+    // });
 </script>
 </body>
 </html>

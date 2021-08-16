@@ -19,7 +19,7 @@ tcl:
 # 开发环境配置
 server:
   # 服务器的HTTP端口，默认为8080
-  port: 8088
+  port: 80
   servlet:
     # 应用的访问路径
     context-path: /
@@ -94,5 +94,6 @@ xss:
 
 #graphicMagick 安装路径
 graphicMagickPath: C:\Program Files (x86)\GraphicsMagick-1.3.31-Q8
+
 #webpPath 安装程序路径
 webpPath: D:\360极速浏览器下载\libwebp-1.2.1-windows-x64\bin\cwebp.exe

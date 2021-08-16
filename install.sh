@@ -8,9 +8,9 @@ echo 'After=network.target syslog.target' >> $service
 echo '' >> $service
 echo '[Service]' >> $service
 echo 'Type=forking' >> $service
-echo 'WorkingDirectory=/opt/tcl-file-server' >> $service
-echo 'ExecStart=/opt/tcl-file-server/start.sh sysd' >> $service
-echo 'ExecStop=/opt/tcl-file-server/stop.sh sysd' >> $service
+echo 'WorkingDirectory=/home/devtcl-file-server' >> $service
+echo 'ExecStart=/home/devtcl-file-server/start.sh sysd' >> $service
+echo 'ExecStop=/home/devtcl-file-server/stop.sh sysd' >> $service
 echo 'Restart=always' >> $service
 echo '' >> $service
 echo '[Install]' >> $service

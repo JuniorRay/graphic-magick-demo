@@ -30,10 +30,10 @@ public class GraphicMagickService {
     @PostConstruct
     public void init() {
         convertCmd = new ConvertCmd(true);
-        convertCmd.setSearchPath(graphicMagickConfig.getGraphicMagickPath());
+        //convertCmd.setSearchPath(graphicMagickConfig.getGraphicMagickPath());
 
         identifyCmd = new IdentifyCmd(true);
-        identifyCmd.setSearchPath(graphicMagickConfig.getGraphicMagickPath());
+        //identifyCmd.setSearchPath(graphicMagickConfig.getGraphicMagickPath());
         log.info("init======");
     }
 
