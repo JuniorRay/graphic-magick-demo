@@ -100,7 +100,7 @@ public class WebpService {
             Process p = Runtime.getRuntime().exec(command);
             p.waitFor();
             // 下载名称
-            String downloadName = StringUtils.substringAfterLast(desFileName, "/");
+            String downloadName = StringUtils.substringAfterLast(desFileName, File.separator);
             response.setCharacterEncoding("utf-8");
             response.setContentType("multipart/form-data");
             response.setHeader("Content-Disposition",

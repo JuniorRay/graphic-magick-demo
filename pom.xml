@@ -7,7 +7,7 @@
     <groupId>org.example</groupId>
     <artifactId>graphic-magick-demo</artifactId>
     <packaging>jar</packaging>
-    <version>1.5</version>
+    <version>1.7</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>

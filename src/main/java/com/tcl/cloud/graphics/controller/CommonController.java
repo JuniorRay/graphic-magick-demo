@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 
 /**
  * @Title CommonController
@@ -119,7 +120,7 @@ public class CommonController
         // 数据资源地址
         String downloadPath = localPath + StringUtils.substringAfter(name, Constants.RESOURCE_PREFIX);
         // 下载名称
-        String downloadName = StringUtils.substringAfterLast(downloadPath, "/");
+        String downloadName = StringUtils.substringAfterLast(downloadPath, File.separator);
         response.setCharacterEncoding("utf-8");
         response.setContentType("multipart/form-data");
         response.setHeader("Content-Disposition",

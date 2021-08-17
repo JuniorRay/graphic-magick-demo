@@ -1,11 +1,10 @@
 package com.tcl.cloud.graphics.controller;
 
 
-import com.tcl.cloud.graphics.config.ServerConfig;
 import com.tcl.cloud.graphics.config.TclConfig;
 import com.tcl.cloud.graphics.constant.Constants;
-import com.tcl.cloud.graphics.utils.file.FileUtils;
 import com.tcl.cloud.graphics.service.GraphicMagickService;
+import com.tcl.cloud.graphics.utils.file.FileUtils;
 import com.tcl.cloud.graphics.utils.text.StringUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -34,11 +33,8 @@ import java.io.File;
 @Slf4j
 @RequestMapping("/img")
 @Api(tags={"【图片处理缩放处理器】Controller"})
-public class GraphicController
-{
+public class GraphicController {
 
-    @Autowired
-    private ServerConfig serverConfig;
     @Autowired
     private GraphicMagickService graphicMagickService;
     /**
@@ -79,7 +75,7 @@ public class GraphicController
             if (graphicMagickService.cutImage(filePath, newPath, x,y, width, height)) {
 
                 // 下载名称
-                String downloadName = StringUtils.substringAfterLast(newPath, "/");
+                String downloadName = StringUtils.substringAfterLast(newPath, File.separator);
                 response.setCharacterEncoding("utf-8");
                 response.setContentType("multipart/form-data");
                 response.setHeader("Content-Disposition",
@@ -128,7 +124,7 @@ public class GraphicController
             if (graphicMagickService.zoomImage(filePath, newPath, width, height)) {
 
                 // 下载名称
-                String downloadName = StringUtils.substringAfterLast(newPath, "/");
+                String downloadName = StringUtils.substringAfterLast(newPath, File.separator);
                 response.setCharacterEncoding("utf-8");
                 response.setContentType("multipart/form-data");
                 response.setHeader("Content-Disposition",
@@ -175,7 +171,7 @@ public class GraphicController
             //TODO 考虑这里是不是以后可以加缓存newPathFile？？？
             if (graphicMagickService.rotate(filePath, newPath, degree)) {
                 // 下载名称
-                String downloadName = StringUtils.substringAfterLast(newPath, "/");
+                String downloadName = StringUtils.substringAfterLast(newPath, File.separator);
                 response.setCharacterEncoding("utf-8");
                 response.setContentType("multipart/form-data");
                 response.setHeader("Content-Disposition",

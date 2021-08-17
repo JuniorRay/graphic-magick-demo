@@ -1,7 +1,6 @@
 package com.tcl.cloud.graphics.config;
 
 
-import com.tcl.cloud.graphics.constant.Constants;
 import com.tcl.cloud.graphics.interceptor.RepeatSubmitInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -39,8 +38,8 @@ public class ResourcesConfig implements WebMvcConfigurer
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry)
     {
-        /** 本地文件上传路径-建立资源映射/profile */
-        registry.addResourceHandler(Constants.RESOURCE_PREFIX + "/**").addResourceLocations("file:" + TclConfig.getProfile() + "/");
+        /** 本地文件上传路径-建立资源映射/profile<==>file:///C://home/dev/tcl-file-server/data/ */
+        //registry.addResourceHandler(Constants.RESOURCE_PREFIX + "/**").addResourceLocations("file:" + TclConfig.getProfile() + "/");
 
         /** swagger配置 */
         registry.addResourceHandler("/swagger-ui/**").addResourceLocations("classpath:/META-INF/resources/webjars/springfox-swagger-ui/");
